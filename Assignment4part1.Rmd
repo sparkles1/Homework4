@@ -1,0 +1,58 @@
+---
+title: "Untitled"
+author: "Udochi"
+date: "February 28, 2018"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(results = FALSE)
+library(tidyverse)
+library(tidyr)
+```
+
+#10.5.What does tibble::enframe() do? When might you use it?
+# **It converts heterogenous data types such as lists and atomic vectors to two column data frames.it can be used when organizing a list of data into data frames. The '?tibble::enframe function gives a detailed description.Below are some examples.**
+```{r  results=FALSE}
+x <- c(1,2,3,5,6)
+enframe(x, name = "name", value = "value")
+enframe(c(a = 5, b = 7))
+
+```
+
+#12.3.I claimed that iso2 and iso3 were redundant with country. Confirm this claim.
+#**The columns were abbreviated versions of the country for each test data, so it is unneccessary to have the same records in three different columns.**
+```{r}
+H1 <- who %>% 
+  gather(new_sp_m014:newrel_f65,key="key",
+         value = "cases",
+         na.rm =TRUE)
+
+H4<- select(H1,country,iso2,iso3) %>% 
+  distinct() %>% 
+  group_by(country)
+H4
+  
+```
+#12.4.For each country, year, and sex compute the total number of cases of TB. Make an informative visualisation of the data
+
+```{r echo =FALSE}
+tidyr::who
+
+H1 <- who %>%
+  gather(new_sp_m014:newrel_f65, key = "key", value = "cases", na.rm = TRUE)
+H2 <- H1 %>%  mutate(key = stringr::str_replace(key, "newrel", "new_rel"))
+H3 <- H2 %>% separate(key,c("new","type","sexage"),sep ="_") 
+H4 <- H3 %>% select(-new,-iso2,-iso3)
+H5 <- H4 %>% separate(sexage,c("sex","age"),sep =1)
+H6 <- H5 %>% group_by(country, year, sex) %>%
+  filter(year > 1995) %>%
+  summarise(cases = sum(cases)) %>%
+  unite(country_sex, country, sex, remove = FALSE) %>%
+  ggplot(aes(x = year, y = cases, group = country_sex, colour = sex)) +
+  geom_line()
+H6
+```
